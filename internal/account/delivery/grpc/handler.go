@@ -53,3 +53,27 @@ func (h *AccountHandler) CreateAccount(ctx context.Context, req *accountv1.Creat
 		Status:    "CREATED",
 	}, nil
 }
+
+func (h *AccountHandler) GetAccount(ctx context.Context, req *accountv1.GetAccountRequest) (*accountv1.GetAccountResponse, error) {
+	return &accountv1.GetAccountResponse{}, nil
+}
+
+func (h *AccountHandler) UpdateBalance(ctx context.Context, req *accountv1.UpdateBalanceRequest) (*accountv1.UpdateBalanceResponse, error) {
+	return &accountv1.UpdateBalanceResponse{}, nil
+}
+
+func (h *AccountHandler) GetAccountHistory(ctx context.Context, req *accountv1.GetAccountHistoryRequest) (*accountv1.GetAccountHistoryResponse, error) {
+	return &accountv1.GetAccountHistoryResponse{}, nil
+}
+
+func (h *AccountHandler) FreezeAccount(ctx context.Context, req *accountv1.FreezeAccountRequest) (*accountv1.FreezeAccountResponse, error) {
+	return &accountv1.FreezeAccountResponse{}, nil
+}
+
+func (h *AccountHandler) CloseAccount(ctx context.Context, req *accountv1.CloseAccountRequest) (*accountv1.CloseAccountResponse, error) {
+	return &accountv1.CloseAccountResponse{}, nil
+}
+
+func (h *AccountHandler) UpdateAccountStatus(ctx context.Context, req *accountv1.UpdateAccountStatusRequest) (*accountv1.UpdateAccountStatusResponse, error) {
+	return &accountv1.UpdateAccountStatusResponse{}, nil
+}

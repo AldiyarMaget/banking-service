@@ -47,3 +47,7 @@ func (h *TransactionHandler) TransferFunds(ctx context.Context, req *transaction
 		Status:        record.Status,
 	}, nil
 }
+
+func (h *TransactionHandler) GetTransactionStatus(ctx context.Context, req *transactionv1.GetTransactionStatusRequest) (*transactionv1.GetTransactionStatusResponse, error) {
+	return &transactionv1.GetTransactionStatusResponse{}, nil
+}

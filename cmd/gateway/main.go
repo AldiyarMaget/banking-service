@@ -12,6 +12,8 @@ import (
 	"banking-service/internal/gateway"
 	accountv1 "github.com/AldiyarMaget/banking-generated/gen/go/proto/account/v1"
 	transactionv1 "github.com/AldiyarMaget/banking-generated/gen/go/proto/transaction/v1"
+	userv1 "github.com/AldiyarMaget/banking-generated/gen/go/proto/user/v1"
+	analyticsv1 "github.com/AldiyarMaget/banking-generated/gen/go/proto/analytics/v1"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/cors"
 	"google.golang.org/grpc"
@@ -26,6 +28,14 @@ func main() {
 	txUrl := os.Getenv("TRANSACTION_SERVICE_URL")
 	if txUrl == "" {
 		txUrl = "localhost:50052"
+	}
+	userUrl := os.Getenv("USER_SERVICE_URL")
+	if userUrl == "" {
+		userUrl = "localhost:50053"
+	}
+	analyticsUrl := os.Getenv("ANALYTICS_SERVICE_URL")
+	if analyticsUrl == "" {
+		analyticsUrl = "localhost:50054"
 	}
 
 	// Connect to Account Service
@@ -46,6 +56,24 @@ func main() {
 	defer txConn.Close()
 	txClient := transactionv1.NewTransactionServiceClient(txConn)
 
+	// Connect to User Service
+	log.Printf("Connecting to User Service at %s...", userUrl)
+	userConn, err := grpc.NewClient(userUrl, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		log.Fatalf("Failed to connect to User Service: %v", err)
+	}
+	defer userConn.Close()
+	userClient := userv1.NewUserServiceClient(userConn)
+
+	// Connect to Analytics Service
+	log.Printf("Connecting to Analytics Service at %s...", analyticsUrl)
+	analyticsConn, err := grpc.NewClient(analyticsUrl, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		log.Fatalf("Failed to connect to Analytics Service: %v", err)
+	}
+	defer analyticsConn.Close()
+	analyticsClient := analyticsv1.NewAnalyticsServiceClient(analyticsConn)
+
 	// Setup Router
 	r := chi.NewRouter()
 
@@ -64,7 +92,7 @@ func main() {
 	r.Use(gateway.LoggerMiddleware)
 
 	// Handlers
-	handler := gateway.NewHandler(accountClient, txClient)
+	handler := gateway.NewHandler(accountClient, txClient, userClient, analyticsClient)
 	handler.RegisterRoutes(r)
 
 	// Server

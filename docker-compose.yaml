@@ -78,6 +78,8 @@ services:
       - GOPROXY=direct
       - ACCOUNT_SERVICE_URL=account-service:50051
       - TRANSACTION_SERVICE_URL=transaction-service:50052
+      - USER_SERVICE_URL=user-service:50053
+      - ANALYTICS_SERVICE_URL=analytics-service:50054
     restart: unless-stopped
 
   account-service:
@@ -123,6 +125,26 @@ services:
     restart: unless-stopped
     depends_on:
       - nats
+
+  user-service:
+    image: golang:1.26-alpine
+    working_dir: /app
+    volumes:
+      - .:/app
+    command: sh -c "apk add --no-cache git && go mod download && go run cmd/user/main.go"
+    environment:
+      - GOPROXY=direct
+    restart: unless-stopped
+
+  analytics-service:
+    image: golang:1.26-alpine
+    working_dir: /app
+    volumes:
+      - .:/app
+    command: sh -c "apk add --no-cache git && go mod download && go run cmd/analytics/main.go"
+    environment:
+      - GOPROXY=direct
+    restart: unless-stopped
 
 volumes:
   postgres_data:
