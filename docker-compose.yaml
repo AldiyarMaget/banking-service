@@ -1,0 +1,132 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: banking_accounts
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  postgres-tx:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: banking_transactions
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_tx_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+
+  nats:
+    image: nats:2.10-alpine
+    command: ["-js"]
+    ports:
+      - "4222:4222"
+      - "8222:8222" # management
+    restart: unless-stopped
+
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - prometheus_data:/prometheus
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana_data:/var/lib/grafana
+    restart: unless-stopped
+
+  tempo:
+    image: grafana/tempo:latest
+    command: ["-config.file=/etc/tempo.yaml"]
+    ports:
+      - "3200:3200"   # tempo
+      - "4317:4317"   # otlp grpc
+      - "4318:4318"   # otlp http
+    restart: unless-stopped
+
+  api-gateway:
+    image: golang:1.26-alpine
+    working_dir: /app
+    volumes:
+      - .:/app
+    command: sh -c "apk add --no-cache git && go mod download && go run cmd/gateway/main.go"
+    ports:
+      - "8080:8080"
+    environment:
+      - GOPROXY=direct
+      - ACCOUNT_SERVICE_URL=account-service:50051
+      - TRANSACTION_SERVICE_URL=transaction-service:50052
+    restart: unless-stopped
+
+  account-service:
+    image: golang:1.26-alpine
+    working_dir: /app
+    volumes:
+      - .:/app
+    command: sh -c "apk add --no-cache git && go mod download && go run cmd/account/main.go"
+    environment:
+      - GOPROXY=direct
+      - DATABASE_URL=postgres://user:password@postgres:5432/banking_accounts?sslmode=disable
+      - NATS_URL=nats://nats:4222
+    restart: unless-stopped
+    depends_on:
+      - postgres
+      - nats
+
+  transaction-service:
+    image: golang:1.26-alpine
+    working_dir: /app
+    volumes:
+      - .:/app
+    command: sh -c "apk add --no-cache git && go mod download && go run cmd/transaction/main.go"
+    environment:
+      - GOPROXY=direct
+      - DATABASE_URL=postgres://user:password@postgres-tx:5432/banking_transactions?sslmode=disable
+      - ACCOUNT_SERVICE_URL=account-service:50051
+    restart: unless-stopped
+    depends_on:
+      - postgres-tx
+      - account-service
+
+  notification-service:
+    image: golang:1.26-alpine
+    working_dir: /app
+    volumes:
+      - .:/app
+    command: sh -c "apk add --no-cache git && go mod download && go run cmd/notification/main.go"
+    environment:
+      - GOPROXY=direct
+      - NATS_URL=nats://nats:4222
+      - SMTP_HOST=dev
+    restart: unless-stopped
+    depends_on:
+      - nats
+
+volumes:
+  postgres_data:
+  postgres_tx_data:
+  redis_data:
+  prometheus_data:
+  grafana_data:
