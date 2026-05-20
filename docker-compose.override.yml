@@ -1,0 +1,49 @@
+services:
+  prometheus:
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+
+  tempo:
+    volumes:
+      - ./tempo.yaml:/etc/tempo.yaml:ro
+
+  api-gateway:
+    environment:
+      - OTEL_SERVICE_NAME=api-gateway
+      - OTEL_EXPORTER_OTLP_ENDPOINT=tempo:4317
+      - OTEL_EXPORTER_OTLP_INSECURE=true
+
+  account-service:
+    environment:
+      - OTEL_SERVICE_NAME=account-service
+      - OTEL_EXPORTER_OTLP_ENDPOINT=tempo:4317
+      - OTEL_EXPORTER_OTLP_INSECURE=true
+
+  transaction-service:
+    environment:
+      - OTEL_SERVICE_NAME=transaction-service
+      - OTEL_EXPORTER_OTLP_ENDPOINT=tempo:4317
+      - OTEL_EXPORTER_OTLP_INSECURE=true
+
+  notification-service:
+    environment:
+      - SMTP_HOST=${SMTP_HOST:-dev}
+      - SMTP_PORT=${SMTP_PORT:-587}
+      - SMTP_USER=${SMTP_USER:-}
+      - SMTP_PASS=${SMTP_PASS:-}
+      - OTEL_SERVICE_NAME=notification-service
+      - OTEL_EXPORTER_OTLP_ENDPOINT=tempo:4317
+      - OTEL_EXPORTER_OTLP_INSECURE=true
+
+  banking-ui:
+    image: node:22-alpine
+    working_dir: /app
+    volumes:
+      - ./banking-ui:/app
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_BASE_URL=http://localhost:8080
+    depends_on:
+      - api-gateway
