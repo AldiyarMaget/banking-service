@@ -79,8 +79,8 @@ func main() {
 
 	// CORS Middleware
 	r.Use(cors.Handler(cors.Options{
-		AllowedOrigins:   []string{"https://*", "http://*"}, // Allows all
-		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedOrigins:   []string{"*"}, // Allows all
+		AllowedMethods:   []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-Correlation-ID"},
 		ExposedHeaders:   []string{"Link", "X-Correlation-ID"},
 		AllowCredentials: true,

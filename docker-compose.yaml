@@ -67,11 +67,9 @@ services:
     restart: unless-stopped
 
   api-gateway:
-    image: golang:1.26-alpine
-    working_dir: /app
-    volumes:
-      - .:/app
-    command: sh -c "apk add --no-cache git && go mod download && go run cmd/gateway/main.go"
+    build:
+      context: .
+      dockerfile: Dockerfile.gateway
     ports:
       - "8080:8080"
     environment:
@@ -83,11 +81,9 @@ services:
     restart: unless-stopped
 
   account-service:
-    image: golang:1.26-alpine
-    working_dir: /app
-    volumes:
-      - .:/app
-    command: sh -c "apk add --no-cache git && go mod download && go run cmd/account/main.go"
+    build:
+      context: .
+      dockerfile: Dockerfile.account
     environment:
       - GOPROXY=direct
       - DATABASE_URL=postgres://user:password@postgres:5432/banking_accounts?sslmode=disable
@@ -98,11 +94,9 @@ services:
       - nats
 
   transaction-service:
-    image: golang:1.26-alpine
-    working_dir: /app
-    volumes:
-      - .:/app
-    command: sh -c "apk add --no-cache git && go mod download && go run cmd/transaction/main.go"
+    build:
+      context: .
+      dockerfile: Dockerfile.transaction
     environment:
       - GOPROXY=direct
       - DATABASE_URL=postgres://user:password@postgres-tx:5432/banking_transactions?sslmode=disable
@@ -113,11 +107,9 @@ services:
       - account-service
 
   notification-service:
-    image: golang:1.26-alpine
-    working_dir: /app
-    volumes:
-      - .:/app
-    command: sh -c "apk add --no-cache git && go mod download && go run cmd/notification/main.go"
+    build:
+      context: .
+      dockerfile: Dockerfile.notification
     environment:
       - GOPROXY=direct
       - NATS_URL=nats://nats:4222
@@ -130,24 +122,25 @@ services:
       - nats
 
   user-service:
-    image: golang:1.26-alpine
-    working_dir: /app
-    volumes:
-      - .:/app
-    command: sh -c "apk add --no-cache git && go mod download && go run cmd/user/main.go"
+    build:
+      context: .
+      dockerfile: Dockerfile.user
     environment:
       - GOPROXY=direct
     restart: unless-stopped
 
   analytics-service:
-    image: golang:1.26-alpine
-    working_dir: /app
-    volumes:
-      - .:/app
-    command: sh -c "apk add --no-cache git && go mod download && go run cmd/analytics/main.go"
+    build:
+      context: .
+      dockerfile: Dockerfile.analytics
     environment:
       - GOPROXY=direct
+      - DATABASE_URL=postgres://user:password@postgres:5432/banking_accounts?sslmode=disable
+      - ACCOUNT_SERVICE_URL=account-service:50051
     restart: unless-stopped
+    depends_on:
+      - postgres
+      - account-service
 
 volumes:
   postgres_data:

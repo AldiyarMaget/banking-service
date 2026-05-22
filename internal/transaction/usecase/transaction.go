@@ -67,8 +67,18 @@ func (u *transactionUseCase) TransferFunds(ctx context.Context, idempotencyKey, 
 		TransactionReason: "Transfer In",
 	})
 	if err != nil {
-		// Needs Saga Compensation in a real distributed system
-		return nil, fmt.Errorf("failed to credit destination account: %w", err)
+		// Saga Compensation: Rollback the debit
+		_, rollbackErr := u.accountClient.UpdateBalance(rpcCtx, &accountv1.UpdateBalanceRequest{
+			IdempotencyKey:    idempotencyKey + "_rollback",
+			AccountId:         sourceAccountID,
+			Amount:            amount, // Positive to credit back
+			TransactionReason: "Rollback: Transfer Failed",
+		})
+		if rollbackErr != nil {
+			// In a real system, this would require manual intervention or a dead-letter queue
+			return nil, fmt.Errorf("failed to credit destination account: %v, and rollback also failed: %v", err, rollbackErr)
+		}
+		return nil, fmt.Errorf("failed to credit destination account: %w. Rollback successful", err)
 	}
 
 	// 3. Save local transaction and outbox event

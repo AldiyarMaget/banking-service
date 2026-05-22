@@ -28,6 +28,34 @@ func (r *testAccountRepo) CreateAccount(ctx context.Context, account *domain.Acc
 	return r.err
 }
 
+func (r *testAccountRepo) GetAccount(ctx context.Context, id string) (*domain.Account, error) {
+	return nil, nil
+}
+
+func (r *testAccountRepo) UpdateBalance(ctx context.Context, id string, amount int64) (int64, error) {
+	return 0, nil
+}
+
+func (r *testAccountRepo) FreezeAccount(ctx context.Context, id string, reason string) error {
+	return nil
+}
+
+func (r *testAccountRepo) CloseAccount(ctx context.Context, id string) error {
+	return nil
+}
+
+func (r *testAccountRepo) UpdateAccountStatus(ctx context.Context, id string, status string) error {
+	return nil
+}
+
+func (r *testAccountRepo) RecordHistory(ctx context.Context, history *domain.AccountHistory) error {
+	return nil
+}
+
+func (r *testAccountRepo) GetAccountHistory(ctx context.Context, accountID string, limit, offset int32) ([]*domain.AccountHistory, error) {
+	return nil, nil
+}
+
 type testOutboxRepo struct {
 	created *domain.OutboxEvent
 	err     error

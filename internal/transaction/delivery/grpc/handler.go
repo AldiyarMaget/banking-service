@@ -39,6 +39,10 @@ func (h *TransactionHandler) TransferFunds(ctx context.Context, req *transaction
 				Status: "ALREADY_PROCESSED",
 			}, nil
 		}
+		var grpcStatus interface{ GRPCStatus() *status.Status }
+		if errors.As(err, &grpcStatus) {
+			return nil, grpcStatus.GRPCStatus().Err()
+		}
 		return nil, status.Errorf(codes.Internal, "transfer failed: %v", err)
 	}
 

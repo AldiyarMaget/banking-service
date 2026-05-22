@@ -4,6 +4,7 @@ type CreateAccountRequest struct {
 	CustomerID     string `json:"customer_id"`
 	Currency       string `json:"currency"`
 	IdempotencyKey string `json:"idempotency_key"`
+	InitialBalance int64  `json:"initial_balance,omitempty"`
 }
 
 type CreateAccountResponse struct {
@@ -29,4 +30,22 @@ type TransferRequest struct {
 type TransferResponse struct {
 	TransactionID string `json:"transaction_id"`
 	Status        string `json:"status"`
+}
+
+type DepositRequest struct {
+	Amount         int64  `json:"amount"`
+	IdempotencyKey string `json:"idempotency_key"`
+}
+
+type FreezeAccountRequest struct {
+	Reason string `json:"reason"`
+}
+
+type UpdateAccountStatusRequest struct {
+	Status string `json:"status"`
+}
+
+type SetDailyLimitRequest struct {
+	AccountID string `json:"account_id"`
+	Limit     int64  `json:"limit"`
 }
